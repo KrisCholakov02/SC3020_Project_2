@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import font
+import PySimpleGUI as psgui
 import customtkinter
 
 MAIN_COLOR = "#212121"
@@ -111,7 +111,8 @@ class Page1(ttk.Frame):
             row = tk.Frame(right_inner2_container, bg=MAIN_COLOR)
             row.pack(fill="x", padx=20, pady=5)
 
-            label = tk.Label(row, text=f"{label_names[i] + ':' }", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white", width=15, anchor="w")
+            label = tk.Label(row, text=f"{label_names[i] + ':'}", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white",
+                             width=15, anchor="w")
             label.pack(side="left")
 
             entry = customtkinter.CTkEntry(master=row,
@@ -156,7 +157,8 @@ class Page2(ttk.Frame):
         right_container.pack_propagate(0)
 
         # add a label to the left container
-        history_label = tk.Label(left_container, text="Previous\nQueries", bg=SEC_COLOR, font=("Arial", 32, "bold"), fg="white")
+        history_label = tk.Label(left_container, text="Previous\nQueries", bg=SEC_COLOR, font=("Arial", 32, "bold"),
+                                 fg="white")
         history_label.pack(pady=10)
 
         # create a scrollable listbox widget
@@ -198,7 +200,7 @@ class Page2(ttk.Frame):
                                bg=MAIN_COLOR, fg="white")
         input_label.pack(pady=20)
 
-        row = tk.Frame(right_inner_container, bg=MAIN_COLOR, width=500, height=50)
+        row = tk.Frame(right_inner_container, bg=MAIN_COLOR, width=650, height=50)
         row.pack(anchor="center", pady=20)
         row.pack_propagate(0)
 
@@ -222,7 +224,7 @@ class Page2(ttk.Frame):
         query1_label.pack(side="left", anchor="center", padx=(0, 20))
 
         query1_inner_container = tk.Frame(query1_container, width=800, height=245, bg=MAIN_COLOR,
-                                          highlightbackground="white", highlightthickness=2)
+                                          highlightbackground=FOURTH_COLOR, highlightthickness=2)
         query1_inner_container.pack(anchor="w")
         query1_inner_container.pack_propagate(0)
         query1_textbox = customtkinter.CTkTextbox(query1_inner_container,
@@ -238,7 +240,7 @@ class Page2(ttk.Frame):
         query2_label.pack(side="left", anchor="center", padx=(0, 20))
 
         query2_inner_container = tk.Frame(query2_container, width=800, height=245, bg=MAIN_COLOR,
-                                          highlightbackground="white", highlightthickness=2)
+                                          highlightbackground=FOURTH_COLOR, highlightthickness=2)
         query2_inner_container.pack(anchor="w")
         query2_inner_container.pack_propagate(0)
 
@@ -248,12 +250,12 @@ class Page2(ttk.Frame):
         query2_textbox.pack()
 
         database_back_button = customtkinter.CTkButton(master=right_inner_container,
-                                                fg_color=SEC_COLOR,
-                                                text="Back to Connection",
-                                                font=("Arial", 28, "bold"),
-                                                hover_color=FOURTH_COLOR,
-                                                text_color="white",
-                                                command=lambda: controller.show_frame(Page1))
+                                                       fg_color=SEC_COLOR,
+                                                       text="Back to Connection",
+                                                       font=("Arial", 28, "bold"),
+                                                       hover_color=FOURTH_COLOR,
+                                                       text_color="white",
+                                                       command=lambda: controller.show_frame(Page1))
         database_back_button.pack(side="left", anchor="s", pady=(0, 35))
 
         submit_button = customtkinter.CTkButton(master=right_inner_container,
@@ -263,22 +265,49 @@ class Page2(ttk.Frame):
                                                 hover_color=FOURTH_COLOR,
                                                 text_color="white",
                                                 command=lambda: controller.show_frame(Page3))
-        submit_button.pack(side="right",  anchor="s", pady=(0, 35))
+        submit_button.pack(side="right", anchor="s", pady=(0, 35))
 
 
 class Page3(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
 
-        label = ttk.Label(self, text="Page Three")
-        label.pack(pady=10, padx=10)
+        container = tk.Frame(self, width=1200, height=800, bg=MAIN_COLOR)
+        container.pack(side="left", fill="both", expand=True)
+        container.pack_propagate(0)
 
-        button = ttk.Button(self, text="Go to Page One",
-                            command=lambda: controller.show_frame(Page1))
-        button.pack()
+        first_inner_container = tk.Frame(container, width=1050, height=500, bg=MAIN_COLOR)
+        first_inner_container.pack(anchor="center", pady=(0, 20))
+        first_inner_container.pack_propagate(0)
+
+        input_label = tk.Label(first_inner_container, text="Query Comparison:", font=("Arial", 28, "bold"),
+                               bg=MAIN_COLOR, fg="white")
+        input_label.pack(pady=20)
+
+        trees_container = tk.Frame(first_inner_container, bg=MAIN_COLOR, width=1050, height=600, highlightbackground="white", highlightthickness=2)
+        trees_container.pack(pady=0)
+        trees_container.pack_propagate(0)
+
+        q1_container = tk.Frame(trees_container, bg="green", width=1050 / 2, height=600)
+        q1_container.pack(side="left")
+        q1_container.pack_propagate(0)
+
+        q2_container = tk.Frame(trees_container, bg="yellow", width=1050 / 2, height=600)
+        q2_container.pack(side="right")
+        q2_container.pack_propagate(0)
+
+        q1_label = tk.Label(q1_container, text="Query 1:", font=("Arial", 28, "bold"), borderwidth=5,
+                            bg=MAIN_COLOR, fg="white", width=100)
+        q1_label.pack(side="top")
+
+        q2_label = tk.Label(q2_container, text="Query 2:", font=("Arial", 28, "bold"), borderwidth=5,
+                            bg=MAIN_COLOR, fg="white", width=100)
+        q2_label.pack(side="top")
+
+
 
 
 if __name__ == "__main__":
     app = MainApplication()
-    app.show_frame(Page2)
+    app.show_frame(Page3)
     app.mainloop()
