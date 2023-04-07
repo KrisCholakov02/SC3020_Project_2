@@ -225,6 +225,10 @@ class Page2(ttk.Frame):
                                           highlightbackground="white", highlightthickness=2)
         query1_inner_container.pack(anchor="w")
         query1_inner_container.pack_propagate(0)
+        query1_textbox = customtkinter.CTkTextbox(query1_inner_container,
+                                                  width=800, height=245,
+                                                  font=("Courier", 16, "normal"))
+        query1_textbox.pack()
 
         query2_container = tk.Frame(right_inner_container, width=800, height=300, bg=MAIN_COLOR)
         query2_container.pack(anchor="w", pady=(30, 0))
@@ -237,6 +241,29 @@ class Page2(ttk.Frame):
                                           highlightbackground="white", highlightthickness=2)
         query2_inner_container.pack(anchor="w")
         query2_inner_container.pack_propagate(0)
+
+        query2_textbox = customtkinter.CTkTextbox(query2_inner_container,
+                                                  width=800, height=245,
+                                                  font=("Courier", 16, "normal"))
+        query2_textbox.pack()
+
+        database_back_button = customtkinter.CTkButton(master=right_inner_container,
+                                                fg_color=SEC_COLOR,
+                                                text="Back to Connection",
+                                                font=("Arial", 28, "bold"),
+                                                hover_color=FOURTH_COLOR,
+                                                text_color="white",
+                                                command=lambda: controller.show_frame(Page1))
+        database_back_button.pack(side="left", anchor="s", pady=(0, 35))
+
+        submit_button = customtkinter.CTkButton(master=right_inner_container,
+                                                fg_color=SEC_COLOR,
+                                                text="Execute",
+                                                font=("Arial", 28, "bold"),
+                                                hover_color=FOURTH_COLOR,
+                                                text_color="white",
+                                                command=lambda: controller.show_frame(Page3))
+        submit_button.pack(side="right",  anchor="s", pady=(0, 35))
 
 
 class Page3(ttk.Frame):
