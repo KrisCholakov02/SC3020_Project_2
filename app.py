@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import font
+import customtkinter
 
 MAIN_COLOR = "#212121"
 SEC_COLOR = "#373737"
@@ -49,7 +51,8 @@ class Page1(ttk.Frame):
         right_container.pack_propagate(0)
 
         # add a label to the left container
-        history_label = tk.Label(left_container, text="History", bg=SEC_COLOR, font=("Arial", 32, "bold"), fg="white")
+        history_label = tk.Label(left_container, text="Your\nDatabases", bg=SEC_COLOR, font=("Arial", 32, "bold"),
+                                 fg="white")
         history_label.pack(pady=10)
 
         # create a scrollable listbox widget
@@ -87,27 +90,49 @@ class Page1(ttk.Frame):
         right_inner_container.pack_propagate(0)
 
         # add a label to the right container
-        input_label = tk.Label(right_inner_container, text="Enter the Connection Details:", font=("Arial", 28, "bold"),
+        input_label = tk.Label(right_inner_container, text="Query Explainer", font=("Arial", 54, "bold"),
                                bg=MAIN_COLOR, fg="white")
-        input_label.pack(pady=30)
+        input_label.pack(pady=(30, 70))
+
+        # create the right inner container
+        right_inner2_container = tk.Frame(right_inner_container, width=600, bg=MAIN_COLOR,
+                                          highlightbackground=SEC_COLOR, highlightthickness=2)
+        right_inner2_container.pack(anchor="center")
+
+        # add a label to the right container
+        input_label = tk.Label(right_inner2_container, text="Enter the Connection Details:", font=("Arial", 28, "bold"),
+                               bg=MAIN_COLOR, fg="white")
+        input_label.pack(pady=(10, 30))
 
         # create the input rows
         rows = []
         label_names = ['Host Name', 'Username', "Password", "Port Number", "Database Name"]
         for i in range(5):
-            row = tk.Frame(right_inner_container, bg=MAIN_COLOR)
+            row = tk.Frame(right_inner2_container, bg=MAIN_COLOR)
             row.pack(fill="x", padx=20, pady=5)
 
-            label = tk.Label(row, text=f"{label_names[i]}: ", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white")
+            label = tk.Label(row, text=f"{label_names[i] + ':' }", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white", width=15, anchor="w")
             label.pack(side="left")
 
-            entry = tk.Entry(row, width=30000, font=("Arial", 28, "bold"), bg="white", fg="black")
-            entry.pack(side="right", fill="x", expand=True)
+            entry = customtkinter.CTkEntry(master=row,
+                                           width=300,
+                                           height=45,
+                                           text_color="white",
+                                           font=("Arial", 28, "normal"),
+                                           border_width=2,
+                                           corner_radius=10)
+            entry.pack(anchor=tk.E, side="right", fill="x", expand=True)
 
             rows.append((label, entry))
 
         # add a submit button
-        submit_button = ttk.Button(right_inner_container, text="Submit", command=lambda: controller.show_frame(Page2))
+        submit_button = customtkinter.CTkButton(master=right_inner2_container,
+                                                fg_color=SEC_COLOR,
+                                                text="Submit",
+                                                font=("Arial", 28, "bold"),
+                                                hover_color=FOURTH_COLOR,
+                                                text_color="white",
+                                                command=lambda: controller.show_frame(Page2))
         submit_button.pack(pady=10)
 
         # center the input rows within the right container
@@ -131,7 +156,7 @@ class Page2(ttk.Frame):
         right_container.pack_propagate(0)
 
         # add a label to the left container
-        history_label = tk.Label(left_container, text="History", bg=SEC_COLOR, font=("Arial", 32, "bold"), fg="white")
+        history_label = tk.Label(left_container, text="Previous\nQueries", bg=SEC_COLOR, font=("Arial", 32, "bold"), fg="white")
         history_label.pack(pady=10)
 
         # create a scrollable listbox widget
@@ -173,35 +198,45 @@ class Page2(ttk.Frame):
                                bg=MAIN_COLOR, fg="white")
         input_label.pack(pady=20)
 
+        row = tk.Frame(right_inner_container, bg=MAIN_COLOR, width=500, height=50)
+        row.pack(anchor="center", pady=20)
+        row.pack_propagate(0)
+
+        label = tk.Label(row, text="Query Name: ", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white", anchor="w")
+        label.pack(side="left", fill="both", anchor="center")
+
+        entry = customtkinter.CTkEntry(master=row,
+                                       height=45,
+                                       width=3000,
+                                       text_color="white",
+                                       font=("Arial", 28, "normal"),
+                                       border_width=2,
+                                       corner_radius=10)
+        entry.pack(anchor=tk.E, side="right", expand=True)
+
         query1_container = tk.Frame(right_inner_container, width=800, height=300, bg=MAIN_COLOR)
         query1_container.pack(anchor="w")
-        query1_container.pack_propagate(0)
 
         query1_label = tk.Label(query1_container, text="Query 1:", font=("Arial", 24, "bold"),
-                               bg=MAIN_COLOR, fg="white")
-        query1_label.pack(anchor="w")
-        query1_label.pack(pady=(0, 20))
+                                bg=MAIN_COLOR, fg="white")
+        query1_label.pack(side="left", anchor="center", padx=(0, 20))
 
-        query1_inner_container = tk.Frame(query1_container, width=800, height=245, bg=MAIN_COLOR,  highlightbackground="white", highlightthickness=2)
+        query1_inner_container = tk.Frame(query1_container, width=800, height=245, bg=MAIN_COLOR,
+                                          highlightbackground="white", highlightthickness=2)
         query1_inner_container.pack(anchor="w")
         query1_inner_container.pack_propagate(0)
 
         query2_container = tk.Frame(right_inner_container, width=800, height=300, bg=MAIN_COLOR)
         query2_container.pack(anchor="w", pady=(30, 0))
-        query2_container.pack_propagate(0)
 
         query2_label = tk.Label(query2_container, text="Query 2:", font=("Arial", 24, "bold"),
                                 bg=MAIN_COLOR, fg="white")
-        query2_label.pack(anchor="w")
-        query2_label.pack(pady=(0, 20))
+        query2_label.pack(side="left", anchor="center", padx=(0, 20))
 
         query2_inner_container = tk.Frame(query2_container, width=800, height=245, bg=MAIN_COLOR,
                                           highlightbackground="white", highlightthickness=2)
         query2_inner_container.pack(anchor="w")
         query2_inner_container.pack_propagate(0)
-
-
-
 
 
 class Page3(ttk.Frame):
