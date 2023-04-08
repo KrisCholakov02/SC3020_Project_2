@@ -4,6 +4,7 @@ from psycopg2 import Error
 import difflib
 import re
 
+
 class PostgresDB:
 
     # Build connection between Postgres and Python

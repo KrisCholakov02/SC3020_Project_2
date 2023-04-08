@@ -2,12 +2,32 @@ import tkinter as tk
 from tkinter import ttk
 import PySimpleGUI as psgui
 import customtkinter
+import json
+from
 
 MAIN_COLOR = "#212121"
 SEC_COLOR = "#373737"
 THIRD_COLOR = "#A4A4A4"
 FOURTH_COLOR = "#828282"
 FONT_COLOR = "#242424"
+
+with open('data.json', 'r') as data_file:
+    try:
+        data = json.load(data_file)
+        if data == {}:
+            data = {
+                "Connections": [],
+                "Queries": []
+            }
+            with open('data.json', 'w+') as _:
+                json.dump(data, _)
+    except:
+        data = {
+            "Connections": [],
+            "Queries": []
+        }
+        with open('data.json', 'w+') as _:
+            json.dump(data, _)
 
 
 class MainApplication(tk.Tk):
@@ -32,11 +52,15 @@ class MainApplication(tk.Tk):
         self.show_frame(Page1)
 
     def show_frame(self, frame_class):
+        self.frames[frame_class].destroy()
+        self.frames[frame_class] = frame_class(self.container, self)
+        self.frames[frame_class].grid(row=0, column=0)
         frame = self.frames[frame_class]
         frame.tkraise()
 
 
 class Page1(ttk.Frame):
+
     def __init__(self, parent, controller):
         super().__init__(parent)
 
@@ -65,21 +89,34 @@ class Page1(ttk.Frame):
         scrollbar.pack(side="right", fill="y")
         history_listbox.configure(yscrollcommand=scrollbar.set)
 
-        # add some items to the listbox
-        for i in range(10):
-            history_listbox.insert("end", f"Item {i + 1}")
-            if i % 2 == 0:
-                history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
-            else:
-                history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
+        # reading the history
+        with open('data.json', 'r') as f:
+            d = json.load(f)
+            connections = d['Connections']
+            if len(connections) != 0:
+                for i in range(len(connections)):
+                    history_listbox.insert("end", f"{connections[i]['IP']}")
+                    if i % 2 == 0:
+                        history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
+                    else:
+                        history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
 
         # create a function to handle clicks on the listbox items
         def handle_click(event):
             selection = event.widget.curselection()
             if selection:
                 index = selection[0]
-                value = event.widget.get(index)
-                print(f"You clicked on item {index + 1}: {value}")
+                ip = event.widget.get(index)
+                x = None
+                with open('data.json', 'r') as _:
+                    x = json.load(_)
+                for t in x["Connections"]:
+                    if t["IP"] == ip:
+
+                        entries = get_entries()
+                        for i in range(5):
+                            entries[i].delete(0, tk.END)
+                            entries[i].insert(0, t[list(t.keys())[i]])
 
         # bind the handle_click function to the listbox
         history_listbox.bind("<<ListboxSelect>>", handle_click)
@@ -106,7 +143,7 @@ class Page1(ttk.Frame):
 
         # create the input rows
         rows = []
-        label_names = ['Host Name', 'Username', "Password", "Port Number", "Database Name"]
+        label_names = ['Host IP', "Port Number", "Database Name", 'Username', "Password"]
         for i in range(5):
             row = tk.Frame(right_inner2_container, bg=MAIN_COLOR)
             row.pack(fill="x", padx=20, pady=5)
@@ -133,13 +170,49 @@ class Page1(ttk.Frame):
                                                 font=("Arial", 28, "bold"),
                                                 hover_color=FOURTH_COLOR,
                                                 text_color="white",
-                                                command=lambda: controller.show_frame(Page2))
+                                                command=lambda: submit_page1(controller))
         submit_button.pack(pady=10)
 
         # center the input rows within the right container
         for row in rows:
             row[0].pack_configure(anchor="center")
             row[1].pack_configure(anchor="center")
+
+        def submit_page1(c):
+            successful = True
+            entries = get_entries()
+            connection = {
+                "IP": entries[0].get(),
+                "Port": entries[1].get(),
+                "Database": entries[2].get(),
+                "Username": entries[3].get(),
+                "Password": entries[4].get(),
+            }
+            print(connection)
+            dat = None
+            with open('data.json', 'r') as fil:
+                dat = json.load(fil)
+                if connection["IP"] in [x["IP"] for x in dat["Connections"]]:
+                    successful = False
+                else:
+                    dat["Connections"].append(connection)
+
+            with open('data.json', 'w+') as fil:
+                json.dump(dat, fil)
+
+            if successful:
+                c.show_frame(Page2)
+            else:
+                print("Error")
+
+        def get_entries():
+            entries = [
+                self.children['!frame2'].children['!frame'].children['!frame'].children['!frame'].children['!ctkentry']]
+            for i in range(2, 6):
+                entries.append(
+                    self.children['!frame2'].children['!frame'].children['!frame'].children['!frame' + str(i)].children[
+                        '!ctkentry'])
+            return entries
 
 
 class Page2(ttk.Frame):
@@ -229,6 +302,7 @@ class Page2(ttk.Frame):
         query1_inner_container.pack_propagate(0)
         query1_textbox = customtkinter.CTkTextbox(query1_inner_container,
                                                   width=800, height=245,
+                                                  fg_color=MAIN_COLOR,
                                                   font=("Courier", 16, "normal"))
         query1_textbox.pack()
 
@@ -245,6 +319,7 @@ class Page2(ttk.Frame):
         query2_inner_container.pack_propagate(0)
 
         query2_textbox = customtkinter.CTkTextbox(query2_inner_container,
+                                                  fg_color=MAIN_COLOR,
                                                   width=800, height=245,
                                                   font=("Courier", 16, "normal"))
         query2_textbox.pack()
@@ -276,7 +351,7 @@ class Page3(ttk.Frame):
         container.pack(side="left", fill="both", expand=True)
         container.pack_propagate(0)
 
-        first_inner_container = tk.Frame(container, width=1050, height=500, bg=MAIN_COLOR)
+        first_inner_container = tk.Frame(container, width=1100, height=420, bg=MAIN_COLOR)
         first_inner_container.pack(anchor="center", pady=(0, 20))
         first_inner_container.pack_propagate(0)
 
@@ -284,15 +359,16 @@ class Page3(ttk.Frame):
                                bg=MAIN_COLOR, fg="white")
         input_label.pack(pady=20)
 
-        trees_container = tk.Frame(first_inner_container, bg=MAIN_COLOR, width=1050, height=600, highlightbackground="white", highlightthickness=2)
+        trees_container = tk.Frame(first_inner_container, bg=MAIN_COLOR, width=1100, height=600,
+                                   highlightbackground="white", highlightthickness=2)
         trees_container.pack(pady=0)
         trees_container.pack_propagate(0)
 
-        q1_container = tk.Frame(trees_container, bg="green", width=1050 / 2, height=600)
+        q1_container = tk.Frame(trees_container, bg="green", width=1100 / 2, height=600)
         q1_container.pack(side="left")
         q1_container.pack_propagate(0)
 
-        q2_container = tk.Frame(trees_container, bg="yellow", width=1050 / 2, height=600)
+        q2_container = tk.Frame(trees_container, bg="yellow", width=1100 / 2, height=600)
         q2_container.pack(side="right")
         q2_container.pack_propagate(0)
 
@@ -304,10 +380,37 @@ class Page3(ttk.Frame):
                             bg=MAIN_COLOR, fg="white", width=100)
         q2_label.pack(side="top")
 
+        differance_message = tk.Label(container, text="Explanation of the Query Comparison:",
+                                      font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white")
+        differance_message.pack(anchor="w", padx=50)
 
+        message_container = tk.Frame(container, bg=MAIN_COLOR, highlightthickness=2, highlightbackground="white")
+        message_container.pack(padx=50, fill="both")
+
+        comparison_message = customtkinter.CTkTextbox(message_container, fg_color=MAIN_COLOR)
+        comparison_message.configure(state="disabled")
+        comparison_message.pack(fill="both")
+
+        database_back_button = customtkinter.CTkButton(master=container,
+                                                       fg_color=SEC_COLOR,
+                                                       text="Enter Another Queries",
+                                                       font=("Arial", 28, "bold"),
+                                                       hover_color=FOURTH_COLOR,
+                                                       text_color="white",
+                                                       command=lambda: controller.show_frame(Page2))
+        database_back_button.pack(side="left", anchor="s", padx=(50, 0), pady=(0, 30))
+
+        submit_button = customtkinter.CTkButton(master=container,
+                                                fg_color=SEC_COLOR,
+                                                text="Go to Connection",
+                                                font=("Arial", 28, "bold"),
+                                                hover_color=FOURTH_COLOR,
+                                                text_color="white",
+                                                command=lambda: controller.show_frame(Page1))
+        submit_button.pack(side="right", anchor="s", padx=(0, 50), pady=(0, 30))
 
 
 if __name__ == "__main__":
     app = MainApplication()
-    app.show_frame(Page3)
+    app.show_frame(Page1)
     app.mainloop()
