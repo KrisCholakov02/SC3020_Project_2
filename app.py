@@ -3,7 +3,8 @@ from tkinter import ttk
 import PySimpleGUI as psgui
 import customtkinter
 import json
-from
+from explain import *
+from project import *
 
 MAIN_COLOR = "#212121"
 SEC_COLOR = "#373737"
@@ -81,7 +82,8 @@ class Page1(ttk.Frame):
 
         # create a scrollable listbox widget
         history_listbox = tk.Listbox(left_container, bg=SEC_COLOR, font=("Arial", 20), fg=FONT_COLOR,
-                                     selectmode="single", highlightthickness=0, borderwidth=0)
+                                                selectmode="single", highlightthickness=5, borderwidth=0,
+                                                highlightcolor=SEC_COLOR, )
         history_listbox.pack(side="left", fill="both", expand=True)
 
         # create a scrollbar widget and link it to the listbox
@@ -95,7 +97,7 @@ class Page1(ttk.Frame):
             connections = d['Connections']
             if len(connections) != 0:
                 for i in range(len(connections)):
-                    history_listbox.insert("end", f"{connections[i]['IP']}")
+                    history_listbox.insert("end", "   " + f"{connections[i]['IP']}")
                     if i % 2 == 0:
                         history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
                     else:
@@ -106,7 +108,7 @@ class Page1(ttk.Frame):
             selection = event.widget.curselection()
             if selection:
                 index = selection[0]
-                ip = event.widget.get(index)
+                ip = event.widget.get(index)[3:]
                 x = None
                 with open('data.json', 'r') as _:
                     x = json.load(_)
@@ -179,7 +181,6 @@ class Page1(ttk.Frame):
             row[1].pack_configure(anchor="center")
 
         def submit_page1(c):
-            successful = True
             entries = get_entries()
             connection = {
                 "IP": entries[0].get(),
@@ -188,21 +189,19 @@ class Page1(ttk.Frame):
                 "Username": entries[3].get(),
                 "Password": entries[4].get(),
             }
-            print(connection)
-            dat = None
             with open('data.json', 'r') as fil:
                 dat = json.load(fil)
-                if connection["IP"] in [x["IP"] for x in dat["Connections"]]:
-                    successful = False
-                else:
+                if not (connection["IP"] in [x["IP"] for x in dat["Connections"]]):
                     dat["Connections"].append(connection)
 
             with open('data.json', 'w+') as fil:
                 json.dump(dat, fil)
 
-            if successful:
-                c.show_frame(Page2)
-            else:
+            try:
+                connection = PostgresDB(connection["IP"], connection["Port"], connection["Database"], connection["Username"], connection["Password"])
+                controller.show_frame(Page2)
+                print("Success")
+            except:
                 print("Error")
 
         def get_entries():
