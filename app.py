@@ -1,10 +1,10 @@
+import json
 import tkinter as tk
 from tkinter import ttk
-import PySimpleGUI as psgui
+
 import customtkinter
-import json
+
 from explain import *
-from project import *
 
 MAIN_COLOR = "#212121"
 SEC_COLOR = "#373737"
@@ -82,8 +82,8 @@ class Page1(ttk.Frame):
 
         # create a scrollable listbox widget
         history_listbox = tk.Listbox(left_container, bg=SEC_COLOR, font=("Arial", 20), fg=FONT_COLOR,
-                                                selectmode="single", highlightthickness=5, borderwidth=0,
-                                                highlightcolor=SEC_COLOR, )
+                                     selectmode="single", highlightthickness=5, borderwidth=0,
+                                     highlightcolor=SEC_COLOR, )
         history_listbox.pack(side="left", fill="both", expand=True)
 
         # create a scrollbar widget and link it to the listbox
@@ -157,6 +157,7 @@ class Page1(ttk.Frame):
             entry = customtkinter.CTkEntry(master=row,
                                            width=300,
                                            height=45,
+                                           fg_color=SEC_COLOR,
                                            text_color="white",
                                            font=("Arial", 28, "normal"),
                                            border_width=2,
@@ -198,10 +199,15 @@ class Page1(ttk.Frame):
                 json.dump(dat, fil)
 
             try:
-                connection = PostgresDB(connection["IP"], connection["Port"], connection["Database"], connection["Username"], connection["Password"])
+                connection = PostgresDB(connection["IP"], connection["Port"], connection["Database"],
+                                        connection["Username"], connection["Password"])
                 controller.show_frame(Page2)
                 print("Success")
             except:
+                connection_status_label = tk.Label(right_inner_container, text="Invalid Connection",
+                                                   font=("Arial", 54, "bold"),
+                                                   bg=MAIN_COLOR, fg="white")
+                connection_status_label.pack(anchor="center", pady=(30, 70))
                 print("Error")
 
         def get_entries():
@@ -282,6 +288,7 @@ class Page2(ttk.Frame):
         entry = customtkinter.CTkEntry(master=row,
                                        height=45,
                                        width=3000,
+                                       fg_color=SEC_COLOR,
                                        text_color="white",
                                        font=("Arial", 28, "normal"),
                                        border_width=2,
@@ -350,7 +357,7 @@ class Page3(ttk.Frame):
         container.pack(side="left", fill="both", expand=True)
         container.pack_propagate(0)
 
-        first_inner_container = tk.Frame(container, width=1100, height=420, bg=MAIN_COLOR)
+        first_inner_container = tk.Frame(container, width=1100, height=510, bg=MAIN_COLOR)
         first_inner_container.pack(anchor="center", pady=(0, 20))
         first_inner_container.pack_propagate(0)
 
@@ -358,16 +365,18 @@ class Page3(ttk.Frame):
                                bg=MAIN_COLOR, fg="white")
         input_label.pack(pady=20)
 
-        trees_container = tk.Frame(first_inner_container, bg=MAIN_COLOR, width=1100, height=600,
-                                   highlightbackground="white", highlightthickness=2)
+        trees_container = tk.Frame(first_inner_container, bg=MAIN_COLOR, width=1100, height=800,
+                                   highlightbackground=THIRD_COLOR, highlightthickness=2, highlightcolor=THIRD_COLOR)
         trees_container.pack(pady=0)
         trees_container.pack_propagate(0)
 
-        q1_container = tk.Frame(trees_container, bg="green", width=1100 / 2, height=600)
+        q1_container = tk.Frame(trees_container, bg=MAIN_COLOR, width=1100 / 2, height=1700, highlightthickness=1,
+                                highlightcolor=THIRD_COLOR, highlightbackground=THIRD_COLOR)
         q1_container.pack(side="left")
         q1_container.pack_propagate(0)
 
-        q2_container = tk.Frame(trees_container, bg="yellow", width=1100 / 2, height=600)
+        q2_container = tk.Frame(trees_container, bg=MAIN_COLOR, width=1100 / 2, height=1700, highlightthickness=1,
+                                highlightcolor=THIRD_COLOR, highlightbackground=THIRD_COLOR)
         q2_container.pack(side="right")
         q2_container.pack_propagate(0)
 
@@ -375,41 +384,73 @@ class Page3(ttk.Frame):
                             bg=MAIN_COLOR, fg="white", width=100)
         q1_label.pack(side="top")
 
+        q1_canvas = tk.Canvas(q1_container, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0)
+        q1_canvas.pack()
+
         q2_label = tk.Label(q2_container, text="Query 2:", font=("Arial", 28, "bold"), borderwidth=5,
                             bg=MAIN_COLOR, fg="white", width=100)
         q2_label.pack(side="top")
+
+        q2_canvas = tk.Canvas(q2_container, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0)
+        q2_canvas.pack()
+
+        q1_label2 = tk.Label(q1_container, text="QEP Structure", font=("Arial", 12), borderwidth=5,
+                             bg=MAIN_COLOR, fg="white", width=100)
+        q1_label2.pack(pady=0)
+
+        q1_structure_textbox = customtkinter.CTkTextbox(q1_container, fg_color=MAIN_COLOR,
+                                                        font=("Courier", 12, "normal"))
+        q1_structure_textbox.configure(state="disabled")
+        q1_structure_textbox.pack(fill="both")
+
+        q2_label2 = tk.Label(q2_container, text="QEP Structure", font=("Arial", 12), borderwidth=5,
+                             bg=MAIN_COLOR, fg="white", width=100)
+        q2_label2.pack(pady=0)
+
+        q2_structure_textbox = customtkinter.CTkTextbox(q2_container, fg_color=MAIN_COLOR,
+                                                        font=("Courier", 12, "normal"))
+        q2_structure_textbox.configure(state="disabled")
+        q2_structure_textbox.pack(fill="both")
 
         differance_message = tk.Label(container, text="Explanation of the Query Comparison:",
                                       font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white")
         differance_message.pack(anchor="w", padx=50)
 
-        message_container = tk.Frame(container, bg=MAIN_COLOR, highlightthickness=2, highlightbackground="white")
-        message_container.pack(padx=50, fill="both")
+        message_container = tk.Frame(container, bg=MAIN_COLOR, highlightthickness=2, highlightbackground="white",
+                                     width=1100 / 3 * 2, height=200)
+        message_container.pack(side='left', padx=(50, 0), anchor='n')
+        message_container.pack_propagate(0)
 
-        comparison_message = customtkinter.CTkTextbox(message_container, fg_color=MAIN_COLOR)
+        comparison_message = customtkinter.CTkTextbox(message_container, fg_color=MAIN_COLOR,
+                                                      font=("Courier", 12, "normal"))
         comparison_message.configure(state="disabled")
         comparison_message.pack(fill="both")
 
-        database_back_button = customtkinter.CTkButton(master=container,
+        buttons_container = tk.Frame(container, bg=MAIN_COLOR, width=1100 / 3 * 1, height=200)
+        buttons_container.pack(side='right', padx=(0, 50), anchor='n')
+        buttons_container.pack_propagate(0)
+
+        database_back_button = customtkinter.CTkButton(master=buttons_container,
                                                        fg_color=SEC_COLOR,
                                                        text="Enter Another Queries",
                                                        font=("Arial", 28, "bold"),
                                                        hover_color=FOURTH_COLOR,
                                                        text_color="white",
                                                        command=lambda: controller.show_frame(Page2))
-        database_back_button.pack(side="left", anchor="s", padx=(50, 0), pady=(0, 30))
+        database_back_button.pack(side="top", anchor="center", pady=(30, 30))
 
-        submit_button = customtkinter.CTkButton(master=container,
+        submit_button = customtkinter.CTkButton(master=buttons_container,
                                                 fg_color=SEC_COLOR,
                                                 text="Go to Connection",
                                                 font=("Arial", 28, "bold"),
                                                 hover_color=FOURTH_COLOR,
                                                 text_color="white",
                                                 command=lambda: controller.show_frame(Page1))
-        submit_button.pack(side="right", anchor="s", padx=(0, 50), pady=(0, 30))
+        submit_button.pack(side="bottom", anchor="center", pady=(0, 30))
 
 
 if __name__ == "__main__":
+    customtkinter.set_appearance_mode("dark")
     app = MainApplication()
-    app.show_frame(Page1)
+    app.show_frame(Page3)
     app.mainloop()
