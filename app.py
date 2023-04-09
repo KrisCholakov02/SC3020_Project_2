@@ -1,6 +1,7 @@
 import json
 import tkinter as tk
 from tkinter import ttk
+import sqlvalidator
 
 import customtkinter
 
@@ -11,6 +12,12 @@ SEC_COLOR = "#373737"
 THIRD_COLOR = "#A4A4A4"
 FOURTH_COLOR = "#828282"
 FONT_COLOR = "#242424"
+
+
+CONNECTION = None
+CONNECTION_NAME = None
+QUERY1 = None
+QUERY2 = None
 
 with open('data.json', 'r') as data_file:
     try:
@@ -25,7 +32,7 @@ with open('data.json', 'r') as data_file:
     except:
         data = {
             "Connections": [],
-            "Queries": []
+            "Queries": {}
         }
         with open('data.json', 'w+') as _:
             json.dump(data, _)
@@ -194,6 +201,7 @@ class Page1(ttk.Frame):
                 dat = json.load(fil)
                 if not (connection["IP"] in [x["IP"] for x in dat["Connections"]]):
                     dat["Connections"].append(connection)
+                    dat["Queries"][connection["IP"]] = []
                 else:
                     for i in range(len(dat["Connections"])):
                         if dat["Connections"][i]["IP"] == connection["IP"]:
@@ -204,14 +212,17 @@ class Page1(ttk.Frame):
                 json.dump(dat, fil)
 
             try:
-                connection = PostgresDB(connection["IP"], connection["Port"], connection["Database"],
-                                        connection["Username"], connection["Password"])
-                controller.show_frame(Page2)
-                print("Success")
+                global CONNECTION
+                CONNECTION = PostgresDB(connection["IP"], connection["Port"], connection["Database"],
+                                 connection["Username"], connection["Password"])
+                global CONNECTION_NAME
+                CONNECTION_NAME = connection["IP"]
+                print(CONNECTION_NAME)
+                c.show_frame(Page2)
             except:
                 connection_status_label = tk.Label(right_inner_container, text="Invalid Connection",
                                                    font=("Arial", 54, "bold"),
-                                                   bg=MAIN_COLOR, fg="white")
+                                                   bg=MAIN_COLOR, fg="red")
                 connection_status_label.pack(anchor="center", pady=(30, 70))
                 print("Error")
 
@@ -257,22 +268,38 @@ class Page2(ttk.Frame):
         # reading the history
         with open('data.json', 'r') as f:
             d = json.load(f)
-            connections = d['Connections']
-            if len(connections) != 0:
-                for i in range(len(connections)):
-                    history_listbox.insert("end", "   " + f"{connections[i]['IP']}")
-                    if i % 2 == 0:
-                        history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
-                    else:
-                        history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
+            queries = d['Queries']
+            if queries != {}:
+                try:
+                    current_queries = queries[CONNECTION_NAME]
+                    for i in range(len(current_queries)):
+                        history_listbox.insert("end", "   " + f"{current_queries[i][0]}")
+                        if i % 2 == 0:
+                            history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
+                        else:
+                            history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
+                except:
+                    pass
 
         # create a function to handle clicks on the listbox items
         def handle_click(event):
             selection = event.widget.curselection()
             if selection:
                 index = selection[0]
-                value = event.widget.get(index)
-                print(f"You clicked on item {index + 1}: {value}")
+                name = event.widget.get(index)[3:]
+                x = None
+                with open('data.json', 'r') as _:
+                    x = json.load(_)
+                for t in x["Queries"][CONNECTION_NAME]:
+                    if t[0] == name:
+                        entries = get_entries()
+                        for a in range(3):
+                            if a == 0:
+                                entries[a].delete(0, tk.END)
+                                entries[a].insert(0, t[a])
+                            else:
+                                entries[a].delete(1.0, tk.END)
+                                entries[a].insert(1.0, t[a])
 
         # bind the handle_click function to the listbox
         history_listbox.bind("<<ListboxSelect>>", handle_click)
@@ -354,13 +381,64 @@ class Page2(ttk.Frame):
                                                 font=("Arial", 28, "bold"),
                                                 hover_color=FOURTH_COLOR,
                                                 text_color="white",
-                                                command=lambda: controller.show_frame(Page3))
+                                                command=lambda: submit_page2())
         submit_button.pack(side="right", anchor="s", pady=(0, 35))
+
+        def submit_page2():
+            entries = get_entries()
+            query_cop = [
+                entries[0].get(),
+                entries[1].get(1.0, "end-1c"),
+                entries[2].get(1.0, "end-1c"),
+            ]
+            with open('data.json', 'r') as fil:
+                dat = json.load(fil)
+                print(CONNECTION_NAME)
+                if not (query_cop[0] in [x[0] for x in dat["Queries"][CONNECTION_NAME]]):
+                    dat["Queries"][CONNECTION_NAME].append(query_cop)
+                else:
+                    for i in range(len(dat["Queries"][CONNECTION_NAME])):
+                        if dat["Queries"][CONNECTION_NAME][i][0] == query_cop[0]:
+                            dat["Queries"][CONNECTION_NAME][i] = query_cop
+                            break
+
+            with open('data.json', 'w+') as fil:
+                json.dump(dat, fil)
+
+            global QUERY1
+            global QUERY2
+            QUERY1 = entries[1].get(1.0, "end-1c").replace("\n", " ")
+            QUERY2 = entries[2].get(1.0, "end-1c").replace("\n", " ")
+            try:
+                QUERY1 = sqlvalidator.format_sql(QUERY1)
+                QUERY2 = sqlvalidator.format_sql(QUERY2)
+                query_p1 = sqlvalidator.parse(QUERY1)
+                query_p2 = sqlvalidator.parse(QUERY2)
+                if query_p1.is_valid() and query_p2.is_valid():
+                    controller.show_frame(Page3)
+                else:
+                    tk.messagebox.showerror("Error", "Invalid SQL Query")
+            except:
+                tk.messagebox.showerror("Error", "Invalid SQL Query")
+
+
+
+        def get_entries():
+            entries = [
+                self.children['!frame2'].children['!frame'].children['!frame'].children['!ctkentry'],
+                self.children['!frame2'].children['!frame'].children['!frame2'].children['!frame'].children[
+                    '!ctktextbox'],
+                self.children['!frame2'].children['!frame'].children['!frame3'].children['!frame'].children[
+                    '!ctktextbox']
+            ]
+            return entries
 
 
 class Page3(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
+
+
 
         container = tk.Frame(self, width=1200, height=800, bg=MAIN_COLOR)
         container.pack(side="left", fill="both", expand=True)
@@ -461,5 +539,5 @@ class Page3(ttk.Frame):
 if __name__ == "__main__":
     customtkinter.set_appearance_mode("dark")
     app = MainApplication()
-    app.show_frame(Page3)
+    app.show_frame(Page1)
     app.mainloop()

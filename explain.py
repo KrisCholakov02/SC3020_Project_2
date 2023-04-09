@@ -156,12 +156,12 @@ class PostgresDB:
         if (query1 == query2):
             print("Queries are same")
             return
-        print("Query1 structure - ")
-        self.qepTreeGenerator(query1)
-        print("\n")
-        print("Query2 structure - ")
-        self.qepTreeGenerator(query2)
-        print("\n")
+        # print("Query1 structure - ")
+        # self.qepTreeGenerator(query1)
+        # print("\n")
+        # print("Query2 structure - ")
+        # self.qepTreeGenerator(query2)
+        # print("\n")
         print("From the above dictionary, comparing the corresponding nodes, we conclude the below differences.")
         self.qepDifference(query1, query2)
         print("These differences in the qep were made because of the ")
