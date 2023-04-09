@@ -123,7 +123,7 @@ class Page1(ttk.Frame):
                     x = json.load(_)
                 for t in x["Connections"]:
                     if t["IP"] == ip:
-
+                        # loading the details of the connection
                         entries = get_entries()
                         for i in range(5):
                             entries[i].delete(0, tk.END)
@@ -156,13 +156,16 @@ class Page1(ttk.Frame):
         rows = []
         label_names = ['Host IP', "Port Number", "Database Name", 'Username', "Password"]
         for i in range(5):
+            # creating a frame for each row of label and input
             row = tk.Frame(right_inner2_container, bg=MAIN_COLOR)
             row.pack(fill="x", padx=20, pady=5)
 
+            # creating a label
             label = tk.Label(row, text=f"{label_names[i] + ':'}", font=("Arial", 28, "bold"), bg=MAIN_COLOR, fg="white",
                              width=15, anchor="w")
             label.pack(side="left")
 
+            # creating an input entry
             entry = customtkinter.CTkEntry(master=row,
                                            width=300,
                                            height=45,
@@ -173,6 +176,7 @@ class Page1(ttk.Frame):
                                            corner_radius=10)
             entry.pack(anchor=tk.E, side="right", fill="x", expand=True)
 
+            # appending the label and entry to the rows list
             rows.append((label, entry))
 
         # add a submit button
@@ -182,7 +186,7 @@ class Page1(ttk.Frame):
                                                 font=("Arial", 28, "bold"),
                                                 hover_color=FOURTH_COLOR,
                                                 text_color="white",
-                                                command=lambda: submit_page1(controller))
+                                                command=lambda: submit_page1(controller))  # invoking submit_page1
         submit_button.pack(pady=10)
 
         # center the input rows within the right container
@@ -191,7 +195,9 @@ class Page1(ttk.Frame):
             row[1].pack_configure(anchor="center")
 
         def submit_page1(c):
+            # getting the input elements
             entries = get_entries()
+            # saving the connection details
             connection = {
                 "IP": entries[0].get(),
                 "Port": entries[1].get(),
@@ -209,17 +215,15 @@ class Page1(ttk.Frame):
                         if dat["Connections"][i]["IP"] == connection["IP"]:
                             dat["Connections"][i] = connection
                             break
-
             with open('data.json', 'w+') as fil:
                 json.dump(dat, fil)
-
+            # checking if the connection is valid
             try:
                 global CONNECTION
                 CONNECTION = PostgresDB(connection["IP"], connection["Port"], connection["Database"],
                                         connection["Username"], connection["Password"])
                 global CONNECTION_NAME
                 CONNECTION_NAME = connection["IP"]
-                print(CONNECTION_NAME)
                 c.show_frame(Page2)
             except:
                 connection_status_label = tk.Label(right_inner_container, text="Invalid Connection",
@@ -283,19 +287,21 @@ class Page2(ttk.Frame):
                 except:
                     pass
 
-        # create a function to handle clicks on the listbox items
+        # create a function to handle clicks on the history listbox items
         def handle_click(event):
             selection = event.widget.curselection()
             if selection:
                 index = selection[0]
                 name = event.widget.get(index)[3:]
                 x = None
+                # loading the data from the json file
                 with open('data.json', 'r') as _:
                     x = json.load(_)
                 for t in x["Queries"][CONNECTION_NAME]:
                     if t[0] == name:
                         entries = get_entries()
                         for a in range(3):
+                            # loading the name of the comparison and the two queries
                             if a == 0:
                                 entries[a].delete(0, tk.END)
                                 entries[a].insert(0, t[a])
@@ -333,17 +339,22 @@ class Page2(ttk.Frame):
                                        corner_radius=10)
         entry.pack(anchor=tk.E, side="right", expand=True)
 
+        # create the query 1 container
         query1_container = tk.Frame(right_inner_container, width=800, height=300, bg=MAIN_COLOR)
         query1_container.pack(anchor="w")
 
+        # add a label to the query 1 container
         query1_label = tk.Label(query1_container, text="Query 1:", font=("Arial", 24, "bold"),
                                 bg=MAIN_COLOR, fg="white")
         query1_label.pack(side="left", anchor="center", padx=(0, 20))
 
+        #
         query1_inner_container = tk.Frame(query1_container, width=800, height=245, bg=MAIN_COLOR,
                                           highlightbackground=FOURTH_COLOR, highlightthickness=2)
         query1_inner_container.pack(anchor="w")
         query1_inner_container.pack_propagate(0)
+
+        # creating the textbox for query 1
         query1_textbox = customtkinter.CTkTextbox(query1_inner_container,
                                                   width=800, height=245,
                                                   fg_color=MAIN_COLOR,
@@ -377,17 +388,19 @@ class Page2(ttk.Frame):
                                                        command=lambda: controller.show_frame(Page1))
         database_back_button.pack(side="left", anchor="s", pady=(0, 35))
 
-        submit_button = customtkinter.CTkButton(master=right_inner_container,
-                                                fg_color=SEC_COLOR,
-                                                text="Execute",
-                                                font=("Arial", 28, "bold"),
-                                                hover_color=FOURTH_COLOR,
-                                                text_color="white",
-                                                command=lambda: submit_page2())
-        submit_button.pack(side="right", anchor="s", pady=(0, 35))
+        # create the execute button
+        execute_button = customtkinter.CTkButton(master=right_inner_container,
+                                                 fg_color=SEC_COLOR,
+                                                 text="Execute",
+                                                 font=("Arial", 28, "bold"),
+                                                 hover_color=FOURTH_COLOR,
+                                                 text_color="white",
+                                                 command=lambda: submit_page2())  # invoking the validation function
+        execute_button.pack(side="right", anchor="s", pady=(0, 35))
 
         def submit_page2():
             entries = get_entries()
+            # storing the values from the inputs to the history
             query_cop = [
                 entries[0].get(),
                 entries[1].get(1.0, "end-1c"),
@@ -403,14 +416,14 @@ class Page2(ttk.Frame):
                         if dat["Queries"][CONNECTION_NAME][i][0] == query_cop[0]:
                             dat["Queries"][CONNECTION_NAME][i] = query_cop
                             break
-
             with open('data.json', 'w+') as fil:
                 json.dump(dat, fil)
-
+            # setting the global variables for the queries
             global QUERY1
             global QUERY2
             QUERY1 = entries[1].get(1.0, "end-1c").replace("\n", " ")
             QUERY2 = entries[2].get(1.0, "end-1c").replace("\n", " ")
+            # validation of the queries
             try:
                 query_p1 = sqlvalidator.parse(QUERY1)
                 query_p2 = sqlvalidator.parse(QUERY2)
@@ -440,6 +453,7 @@ class Page3(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
 
+        # generating the trees of the QEPs
         try:
             if CONNECTION is not None:
                 global COMP_RESULT
@@ -485,6 +499,7 @@ class Page3(ttk.Frame):
                             bg=MAIN_COLOR, fg="white", width=100)
         q1_label.pack(side="top")
 
+        # function to get the depth of the tree
         def get_tree_depth(tree):
             if tree is None:
                 return 0
@@ -496,12 +511,14 @@ class Page3(ttk.Frame):
                 else:
                     return 1 + get_tree_depth(tree['children'][0])
 
+        # setting the drawing constants
         center_x = 1000
         rectangle_width = 100
         rectangle_height = 50
         levels_padding = 50
         notes_padding = 20
 
+        # function to draw each node of the tree (rectangle + text)
         def draw_node(canvas, x1, y1, text):
             rectangle = canvas.create_rectangle(x1, y1, x1 + rectangle_width, y1 + rectangle_height, fill="white",
                                                 width=2,
@@ -512,31 +529,50 @@ class Page3(ttk.Frame):
             canvas.itemconfig(rectangle)
             canvas.itemconfig(rectangle_text)
 
+        # function to draw the tree
         def draw_tree(tree, canvas: tk.Canvas, x1=center_x - rectangle_width / 2, y1=levels_padding):
+            # getting the name of the current node
             current_node = tree['name']
-            print(x1, y1)
+            # drawing the current node
             draw_node(canvas, x1, y1, current_node)
+            # if the current node has children, draw them
             if 'children' in list(tree.keys()):
-                print("here")
-                if len(tree['children']) == 1:
-                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 + rectangle_width / 2,
+                if len(tree['children']) == 1:  # if there is only one child -> draw it just under the current node
+                    # drawing the straight line between the current node and the child
+                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
+                                               x1 + rectangle_width / 2,
                                                y1 + levels_padding + rectangle_height, fill="black", width=2)
                     canvas.itemconfig(line1)
+                    # drawing the child node
                     draw_tree(tree['children'][0], canvas, x1, y1 + levels_padding + rectangle_height)
-                else:
+                else:  # if there are two children -> draw them into two branches
+                    # variable for the distance between branches (applied only on the first node - the root)
                     if x1 == center_x - rectangle_width / 2:
                         b = 20
                     else:
                         b = 0
-                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                    # drawing the lines to the children nodes, calculating their coordinates
+                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
+                                               x1 - b + 0.5 * rectangle_width - notes_padding * (
+                                                       (get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(
+                                                   tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
                                                y1 + levels_padding + rectangle_height, fill="black", width=2)
-                    line2 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                    line2 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
+                                               x1 + b - 0.5 * rectangle_width + notes_padding * (
+                                                       (get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(
+                                                   tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
                                                y1 + levels_padding + rectangle_height, fill="black", width=2)
                     canvas.itemconfig(line1)
                     canvas.itemconfig(line2)
-
-                    draw_tree(tree['children'][0], canvas, x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(tree) - 2) ** 2) * rectangle_width, y1 + levels_padding + rectangle_height)
-                    draw_tree(tree['children'][1], canvas, x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(tree) - 2) ** 2) * rectangle_width, y1 + levels_padding + rectangle_height)
+                    # recursively drawing the children nodes, calculating their coordinates
+                    draw_tree(tree['children'][0], canvas,
+                              x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - (
+                                      (get_tree_depth(tree) - 2) ** 2) * rectangle_width,
+                              y1 + levels_padding + rectangle_height)
+                    draw_tree(tree['children'][1], canvas,
+                              x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + (
+                                      (get_tree_depth(tree) - 2) ** 2) * rectangle_width,
+                              y1 + levels_padding + rectangle_height)
 
         q1_frame = tk.Frame(q1_container, bg="white", width=1100 / 2, height=280, highlightthickness=0, )
         q1_frame.pack()
@@ -641,5 +677,5 @@ class Page3(ttk.Frame):
 if __name__ == "__main__":
     customtkinter.set_appearance_mode("dark")
     app = MainApplication()
-    app.show_frame(Page3)
+    app.show_frame(Page1)
     app.mainloop()
