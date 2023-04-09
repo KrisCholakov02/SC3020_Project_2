@@ -1,0 +1,9 @@
+binary==1.0.0
+customtkinter==5.1.2
+darkdetect==0.8.0
+graphviz==0.20.1
+Pmw==2.1.1
+psycopg2-binary==2.9.6
+PySimpleGUI==4.60.4
+sqlparse==0.4.3
+sqlvalidator==0.0.20
