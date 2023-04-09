@@ -256,6 +256,7 @@ class Page2(ttk.Frame):
 
         # add some items to the listbox
         for i in range(10):
+
             history_listbox.insert("end", f"Item {i + 1}")
             if i % 2 == 0:
                 history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
