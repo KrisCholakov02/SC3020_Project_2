@@ -1,1 +1,1 @@
-{"Connections": [{"IP": "", "Port": "", "Database": "", "Username": "", "Password": ""}, {"IP": "127.0.0.1", "Port": "5433", "Database": "postgres", "Username": "postgres", "Password": "1234"}], "Queries": []}
+{"Connections": [{"IP": "", "Port": "1", "Database": "2", "Username": "3", "Password": "4"}, {"IP": "127.0.0.1", "Port": "5433", "Database": "postgres", "Username": "postgres", "Password": "1234"}], "Queries": []}

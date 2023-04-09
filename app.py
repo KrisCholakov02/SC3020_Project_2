@@ -194,6 +194,11 @@ class Page1(ttk.Frame):
                 dat = json.load(fil)
                 if not (connection["IP"] in [x["IP"] for x in dat["Connections"]]):
                     dat["Connections"].append(connection)
+                else:
+                    for i in range(len(dat["Connections"])):
+                        if dat["Connections"][i]["IP"] == connection["IP"]:
+                            dat["Connections"][i] = connection
+                            break
 
             with open('data.json', 'w+') as fil:
                 json.dump(dat, fil)
