@@ -254,14 +254,17 @@ class Page2(ttk.Frame):
         scrollbar.pack(side="right", fill="y")
         history_listbox.configure(yscrollcommand=scrollbar.set)
 
-        # add some items to the listbox
-        for i in range(10):
-
-            history_listbox.insert("end", f"Item {i + 1}")
-            if i % 2 == 0:
-                history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
-            else:
-                history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
+        # reading the history
+        with open('data.json', 'r') as f:
+            d = json.load(f)
+            connections = d['Connections']
+            if len(connections) != 0:
+                for i in range(len(connections)):
+                    history_listbox.insert("end", "   " + f"{connections[i]['IP']}")
+                    if i % 2 == 0:
+                        history_listbox.itemconfig(i, {'bg': THIRD_COLOR})
+                    else:
+                        history_listbox.itemconfig(i, {'bg': FOURTH_COLOR})
 
         # create a function to handle clicks on the listbox items
         def handle_click(event):
