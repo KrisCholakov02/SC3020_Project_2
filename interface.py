@@ -547,10 +547,7 @@ class Page3(ttk.Frame):
                     draw_tree(tree['children'][0], canvas, x1, y1 + levels_padding + rectangle_height)
                 else:  # if there are two children -> draw them into two branches
                     # variable for the distance between branches (applied only on the first node - the root)
-                    if x1 == center_x - rectangle_width / 2:
-                        b = 20
-                    else:
-                        b = 0
+                    b = 20
                     # drawing the lines to the children nodes, calculating their coordinates
                     line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
                                                x1 - b + 0.5 * rectangle_width - notes_padding * (
