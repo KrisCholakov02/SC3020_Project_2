@@ -1,9 +1,9 @@
 import json
 import tkinter as tk
 from tkinter import ttk
-import sqlvalidator
 
 import customtkinter
+import sqlvalidator
 
 from explain import *
 
@@ -13,11 +13,13 @@ THIRD_COLOR = "#A4A4A4"
 FOURTH_COLOR = "#828282"
 FONT_COLOR = "#242424"
 
-
 CONNECTION = None
 CONNECTION_NAME = None
 QUERY1 = None
 QUERY2 = None
+QUERY1_TREE = None
+QUERY2_TREE = None
+COMP_RESULT = None
 
 with open('data.json', 'r') as data_file:
     try:
@@ -214,7 +216,7 @@ class Page1(ttk.Frame):
             try:
                 global CONNECTION
                 CONNECTION = PostgresDB(connection["IP"], connection["Port"], connection["Database"],
-                                 connection["Username"], connection["Password"])
+                                        connection["Username"], connection["Password"])
                 global CONNECTION_NAME
                 CONNECTION_NAME = connection["IP"]
                 print(CONNECTION_NAME)
@@ -410,18 +412,18 @@ class Page2(ttk.Frame):
             QUERY1 = entries[1].get(1.0, "end-1c").replace("\n", " ")
             QUERY2 = entries[2].get(1.0, "end-1c").replace("\n", " ")
             try:
-                QUERY1 = sqlvalidator.format_sql(QUERY1)
-                QUERY2 = sqlvalidator.format_sql(QUERY2)
                 query_p1 = sqlvalidator.parse(QUERY1)
                 query_p2 = sqlvalidator.parse(QUERY2)
                 if query_p1.is_valid() and query_p2.is_valid():
-                    controller.show_frame(Page3)
+                    try:
+                        CONNECTION.explain_differences(QUERY1, QUERY2)
+                        controller.show_frame(Page3)
+                    except:
+                        tk.messagebox.showerror("Error", "Not Queries for the Chosen Connection")
                 else:
                     tk.messagebox.showerror("Error", "Invalid SQL Query")
-            except:
-                tk.messagebox.showerror("Error", "Invalid SQL Query")
-
-
+            except Exception as e:
+                tk.messagebox.showerror("Error", "Invalid SQL Query\n" + str(e))
 
         def get_entries():
             entries = [
@@ -438,7 +440,19 @@ class Page3(ttk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
 
-
+        try:
+            if CONNECTION is not None:
+                global COMP_RESULT
+                COMP_RESULT = CONNECTION.explain_differences(QUERY1, QUERY2)
+                q1_tree = CONNECTION.qepTreeGenerator(QUERY1)
+                q2_tree = CONNECTION.qepTreeGenerator(QUERY2)
+                global QUERY1_TREE
+                QUERY1_TREE = q1_tree
+                global QUERY2_TREE
+                QUERY2_TREE = q2_tree
+        except Exception as e:
+            tk.messagebox.showerror("Error", "Error in Query Comparison\n" + str(e))
+            pass
 
         container = tk.Frame(self, width=1200, height=800, bg=MAIN_COLOR)
         container.pack(side="left", fill="both", expand=True)
@@ -471,15 +485,98 @@ class Page3(ttk.Frame):
                             bg=MAIN_COLOR, fg="white", width=100)
         q1_label.pack(side="top")
 
-        q1_canvas = tk.Canvas(q1_container, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0)
-        q1_canvas.pack()
+        def get_tree_depth(tree):
+            if tree is None:
+                return 0
+            if "children" not in list(tree.keys()):
+                return 1
+            else:
+                if len(tree['children']) == 2:
+                    return 1 + max(get_tree_depth(tree['children'][0]), get_tree_depth(tree['children'][1]))
+                else:
+                    return 1 + get_tree_depth(tree['children'][0])
+
+        center_x = 1000
+        rectangle_width = 100
+        rectangle_height = 50
+        levels_padding = 50
+        notes_padding = 20
+
+        def draw_node(canvas, x1, y1, text):
+            rectangle = canvas.create_rectangle(x1, y1, x1 + rectangle_width, y1 + rectangle_height, fill="white",
+                                                width=2,
+                                                outline="black")
+            rectangle_text = canvas.create_text((x1 + x1 + rectangle_width) / 2, (y1 + y1 + rectangle_height) / 2,
+                                                text=text, font=("Arial", 12, "bold"),
+                                                fill="black")
+            canvas.itemconfig(rectangle)
+            canvas.itemconfig(rectangle_text)
+
+        def draw_tree(tree, canvas: tk.Canvas, x1=center_x - rectangle_width / 2, y1=levels_padding):
+            current_node = tree['name']
+            print(x1, y1)
+            draw_node(canvas, x1, y1, current_node)
+            if 'children' in list(tree.keys()):
+                print("here")
+                if len(tree['children']) == 1:
+                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 + rectangle_width / 2,
+                                               y1 + levels_padding + rectangle_height, fill="black", width=2)
+                    canvas.itemconfig(line1)
+                    draw_tree(tree['children'][0], canvas, x1, y1 + levels_padding + rectangle_height)
+                else:
+                    if x1 == center_x - rectangle_width / 2:
+                        b = 20
+                    else:
+                        b = 0
+                    line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                                               y1 + levels_padding + rectangle_height, fill="black", width=2)
+                    line2 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height, x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                                               y1 + levels_padding + rectangle_height, fill="black", width=2)
+                    canvas.itemconfig(line1)
+                    canvas.itemconfig(line2)
+
+                    draw_tree(tree['children'][0], canvas, x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(tree) - 2) ** 2) * rectangle_width, y1 + levels_padding + rectangle_height)
+                    draw_tree(tree['children'][1], canvas, x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(tree) - 2) ** 2) * rectangle_width, y1 + levels_padding + rectangle_height)
+
+        q1_frame = tk.Frame(q1_container, bg="white", width=1100 / 2, height=280, highlightthickness=0, )
+        q1_frame.pack()
+        q1_frame.pack_propagate(0)
+
+        q1_canvas = tk.Canvas(q1_frame, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0,
+                              scrollregion=(0, 0, 2000, 2000))
+        q1_scroll_y = tk.Scrollbar(q1_frame, orient="vertical", command=q1_canvas.yview)
+        q1_scroll_x = tk.Scrollbar(q1_frame, orient="horizontal", command=q1_canvas.xview)
+
+        q1_canvas.configure(yscrollcommand=q1_scroll_y.set, xscrollcommand=q1_scroll_x.set)
+
+        q1_scroll_y.pack(side='right', fill='y')
+        q1_scroll_x.pack(side='bottom', fill='x')
+        q1_canvas.xview_moveto(0.365)
+        q1_canvas.pack(side="left", fill="both", expand=True)
+        if QUERY1_TREE is not None:
+            draw_tree(QUERY1_TREE, q1_canvas)
 
         q2_label = tk.Label(q2_container, text="Query 2:", font=("Arial", 28, "bold"), borderwidth=5,
                             bg=MAIN_COLOR, fg="white", width=100)
         q2_label.pack(side="top")
 
-        q2_canvas = tk.Canvas(q2_container, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0)
-        q2_canvas.pack()
+        q2_frame = tk.Frame(q2_container, bg="white", width=1100 / 2, height=280, highlightthickness=0, )
+        q2_frame.pack()
+        q2_frame.pack_propagate(0)
+
+        q2_canvas = tk.Canvas(q2_frame, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0,
+                              scrollregion=(0, 0, 2000, 2000))
+        q2_scroll_y = tk.Scrollbar(q2_frame, orient="vertical", command=q2_canvas.yview)
+        q2_scroll_x = tk.Scrollbar(q2_frame, orient="horizontal", command=q2_canvas.xview)
+
+        q2_canvas.configure(yscrollcommand=q2_scroll_y.set, xscrollcommand=q2_scroll_x.set)
+
+        q2_scroll_y.pack(side='right', fill='y')
+        q2_scroll_x.pack(side='bottom', fill='x')
+        q2_canvas.xview_moveto(0.365)
+        q2_canvas.pack(side="left", fill="both", expand=True)
+        if QUERY2_TREE is not None:
+            draw_tree(QUERY2_TREE, q2_canvas)
 
         q1_label2 = tk.Label(q1_container, text="QEP Structure", font=("Arial", 12), borderwidth=5,
                              bg=MAIN_COLOR, fg="white", width=100)
@@ -487,6 +584,8 @@ class Page3(ttk.Frame):
 
         q1_structure_textbox = customtkinter.CTkTextbox(q1_container, fg_color=MAIN_COLOR,
                                                         font=("Courier", 12, "normal"))
+        if QUERY1_TREE is not None:
+            q1_structure_textbox.insert(1.0, str(QUERY1_TREE))
         q1_structure_textbox.configure(state="disabled")
         q1_structure_textbox.pack(fill="both")
 
@@ -496,6 +595,8 @@ class Page3(ttk.Frame):
 
         q2_structure_textbox = customtkinter.CTkTextbox(q2_container, fg_color=MAIN_COLOR,
                                                         font=("Courier", 12, "normal"))
+        if QUERY2_TREE is not None:
+            q2_structure_textbox.insert(1.0, str(QUERY2_TREE))
         q2_structure_textbox.configure(state="disabled")
         q2_structure_textbox.pack(fill="both")
 
@@ -510,6 +611,7 @@ class Page3(ttk.Frame):
 
         comparison_message = customtkinter.CTkTextbox(message_container, fg_color=MAIN_COLOR,
                                                       font=("Courier", 12, "normal"))
+        comparison_message.insert(1.0, str(COMP_RESULT))
         comparison_message.configure(state="disabled")
         comparison_message.pack(fill="both")
 
@@ -539,5 +641,5 @@ class Page3(ttk.Frame):
 if __name__ == "__main__":
     customtkinter.set_appearance_mode("dark")
     app = MainApplication()
-    app.show_frame(Page1)
+    app.show_frame(Page3)
     app.mainloop()

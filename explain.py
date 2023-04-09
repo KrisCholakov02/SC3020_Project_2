@@ -69,34 +69,35 @@ class PostgresDB:
         # print(query2_list)
         counter = 1
 
+        result = ""
+
         for clause_name in clause_names:
             if clause_name in query1_list and clause_name in query2_list:
                 if query1_list[clause_name] != query2_list[clause_name]:
-                    print(
-                        f"{counter}. Difference in {clause_name} clause: {query1_list[clause_name]} modified to {query2_list[clause_name]}")
+                    result += f"{counter}. Difference in {clause_name} clause: {query1_list[clause_name]} modified to {query2_list[clause_name]}\n"
                     counter = counter + 1
             if clause_name in query1_list and clause_name not in query2_list:
-                print(f"{counter}. Clause {clause_name} removed in query2")
+                result += f"{counter}. Clause {clause_name} removed in query2\n"
                 counter = counter + 1
             if clause_name in query2_list and clause_name not in query1_list:
-                print(f"{counter}. Clause {clause_name} added in query2: {query2_list[clause_name]}")
+                result += f"{counter}. Clause {clause_name} added in query2: {query2_list[clause_name]}\n"
                 counter = counter + 1
+        return result
 
     def qepDifference(self, query1, query2):
         queryresult1 = self.queryDB(query1)
         queryresult2 = self.queryDB(query2)
         differences = []
         differences = self.compare_qep_trees(queryresult1["Plan"], queryresult2["Plan"])
-        if (len(differences) == 0):
-            print("No change in qep")
-            return
-        print(differences)
+        if len(differences) == 0:
+            return "No change in qep"
+        return differences
 
     def qepTreeGenerator(self, query1):
         queryresult1 = self.queryDB(query1)
         graph = {}
         graph = PostgresDB.create_graph(queryresult1["Plan"])
-        print(graph)
+        return graph
 
     def create_graph(qep_json):
         graph = {}
@@ -152,17 +153,11 @@ class PostgresDB:
         # Return the output
         return "\n".join(output)
 
-    def explainDifferences(self, query1, query2):
-        if (query1 == query2):
-            print("Queries are same")
-            return
-        # print("Query1 structure - ")
-        # self.qepTreeGenerator(query1)
-        # print("\n")
-        # print("Query2 structure - ")
-        # self.qepTreeGenerator(query2)
-        # print("\n")
-        print("From the above dictionary, comparing the corresponding nodes, we conclude the below differences.")
-        self.qepDifference(query1, query2)
-        print("These differences in the qep were made because of the ")
-        self.queryDifference(query1, query2)
+    def explain_differences(self, query1, query2):
+        if query1 == query2:
+            return "Queries are same"
+        string = "From the above dictionary, comparing the corresponding nodes, we conclude the below differences:\n"
+        string += self.qepDifference(query1, query2)
+        string += "\nThese differences in the qep were made because of: \n"
+        string += self.queryDifference(query1, query2)
+        return string
