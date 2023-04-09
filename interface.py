@@ -512,7 +512,7 @@ class Page3(ttk.Frame):
                     return 1 + get_tree_depth(tree['children'][0])
 
         # setting the drawing constants
-        center_x = 1000
+        center_x = 2000
         rectangle_width = 100
         rectangle_height = 50
         levels_padding = 50
@@ -546,29 +546,21 @@ class Page3(ttk.Frame):
                     # drawing the child node
                     draw_tree(tree['children'][0], canvas, x1, y1 + levels_padding + rectangle_height)
                 else:  # if there are two children -> draw them into two branches
-                    # variable for the distance between branches (applied only on the first node - the root)
-                    b = 20
                     # drawing the lines to the children nodes, calculating their coordinates
                     line1 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
-                                               x1 - b + 0.5 * rectangle_width - notes_padding * (
-                                                       (get_tree_depth(tree) - 3) ** 2) - ((get_tree_depth(
-                                                   tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                                               x1 - 250,
                                                y1 + levels_padding + rectangle_height, fill="black", width=2)
                     line2 = canvas.create_line(x1 + rectangle_width / 2, y1 + rectangle_height,
-                                               x1 + b - 0.5 * rectangle_width + notes_padding * (
-                                                       (get_tree_depth(tree) - 3) ** 2) + ((get_tree_depth(
-                                                   tree) - 2) ** 2) * rectangle_width + rectangle_width / 2,
+                                               x1 + 250,
                                                y1 + levels_padding + rectangle_height, fill="black", width=2)
                     canvas.itemconfig(line1)
                     canvas.itemconfig(line2)
                     # recursively drawing the children nodes, calculating their coordinates
                     draw_tree(tree['children'][0], canvas,
-                              x1 - b + 0.5 * rectangle_width - notes_padding * ((get_tree_depth(tree) - 3) ** 2) - (
-                                      (get_tree_depth(tree) - 2) ** 2) * rectangle_width,
+                              x1 - 250,
                               y1 + levels_padding + rectangle_height)
                     draw_tree(tree['children'][1], canvas,
-                              x1 + b - 0.5 * rectangle_width + notes_padding * ((get_tree_depth(tree) - 3) ** 2) + (
-                                      (get_tree_depth(tree) - 2) ** 2) * rectangle_width,
+                              x1 + 250,
                               y1 + levels_padding + rectangle_height)
 
         q1_frame = tk.Frame(q1_container, bg="white", width=1100 / 2, height=280, highlightthickness=0, )
@@ -576,7 +568,7 @@ class Page3(ttk.Frame):
         q1_frame.pack_propagate(0)
 
         q1_canvas = tk.Canvas(q1_frame, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0,
-                              scrollregion=(0, 0, 2000, 2000))
+                              scrollregion=(0, 0, 4000, 4000))
         q1_scroll_y = tk.Scrollbar(q1_frame, orient="vertical", command=q1_canvas.yview)
         q1_scroll_x = tk.Scrollbar(q1_frame, orient="horizontal", command=q1_canvas.xview)
 
@@ -584,7 +576,7 @@ class Page3(ttk.Frame):
 
         q1_scroll_y.pack(side='right', fill='y')
         q1_scroll_x.pack(side='bottom', fill='x')
-        q1_canvas.xview_moveto(0.365)
+        q1_canvas.xview_moveto(0.43)
         q1_canvas.pack(side="left", fill="both", expand=True)
         if QUERY1_TREE is not None:
             draw_tree(QUERY1_TREE, q1_canvas)
@@ -598,7 +590,7 @@ class Page3(ttk.Frame):
         q2_frame.pack_propagate(0)
 
         q2_canvas = tk.Canvas(q2_frame, width=1100 / 2, height=280, bg="white", borderwidth=0, highlightthickness=0,
-                              scrollregion=(0, 0, 2000, 2000))
+                              scrollregion=(0, 0, 4000, 4000))
         q2_scroll_y = tk.Scrollbar(q2_frame, orient="vertical", command=q2_canvas.yview)
         q2_scroll_x = tk.Scrollbar(q2_frame, orient="horizontal", command=q2_canvas.xview)
 
@@ -606,7 +598,7 @@ class Page3(ttk.Frame):
 
         q2_scroll_y.pack(side='right', fill='y')
         q2_scroll_x.pack(side='bottom', fill='x')
-        q2_canvas.xview_moveto(0.365)
+        q2_canvas.xview_moveto(0.43)
         q2_canvas.pack(side="left", fill="both", expand=True)
         if QUERY2_TREE is not None:
             draw_tree(QUERY2_TREE, q2_canvas)
