@@ -119,15 +119,20 @@ class PostgresDB:
         # Define a DFS traversal function to traverse the QEP trees
         def dfs_traversal(node1, node2, path, counter):
             # Check if the nodes have the same node type
+            if (node1['Node Type'] != node2['Node Type'] or node1.get('Join Type') != node2.get(
+                    'Join Type') or node1.get('Hash Cond') != node2.get('Hash Cond')
+                    or node1.get('Startup Cost') != node2.get('Startup Cost') or node1.get('Total Cost') != node2.get(
+                        'Total Cost')):
+                output.append(f"Difference {counter}\n")
             if node1['Node Type'] != node2['Node Type']:
                 output.append(
-                    f"Difference {counter}: \nNode Type: {node1['Node Type']} transitions to {node2['Node Type']}")
+                    f"Node Type: {node1['Node Type']} transitions to {node2['Node Type']}")
 
             # Check for other differences in the nodes
             if node1.get('Join Type') != node2.get('Join Type'):
-                output.append(f"Join Type: {node1.get('Join Type')} tansitions to {node2.get('Join Type')})")
-            if node1.get('Hash Cond') != node2.get('Startup Cost'):
-                output.append(f"Hash Condition: {node1.get('Hash Condt')} transitions to {node2.get('Hash Cond')}")
+                output.append(f"Join Type: {node1.get('Join Type')} tansitions to {node2.get('Join Type')}")
+            if node1.get('Hash Cond') != node2.get('Hash Cond'):
+                output.append(f"Hash Condition: {node1.get('Hash Cond')} transitions to {node2.get('Hash Cond')}")
             if node1.get('Startup Cost') != node2.get('Startup Cost'):
                 output.append(f"Startup Cost: {node1.get('Startup Cost')} transitions to {node2.get('Startup Cost')}")
             if node1.get('Total Cost') != node2.get('Total Cost'):
