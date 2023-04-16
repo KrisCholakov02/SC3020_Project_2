@@ -83,12 +83,68 @@ class PostgresDB:
                 result += f"{counter}. Clause {clause_name} added in query2: {query2_list[clause_name]}\n"
                 counter = counter + 1
         return result
+    
+    def count_node_types(self,plan):
+        node_count = {}
+        node_type = plan['Node Type']
+        if node_type not in node_count:
+            node_count[node_type] = 1
+        else:
+            node_count[node_type] += 1
+        if 'Plans' in plan:
+            for subplan in plan['Plans']:
+                sub_count = self.count_node_types(subplan)
+                if sub_count is not None:
+                    for key, value in sub_count.items():
+                        if key not in node_count:
+                            node_count[key] = value
+                        else:
+                            node_count[key] += value
+        return node_count
+
+    def count_differences(self, queryresult1, queryresult2):
+        c_dict1 = self.count_node_types(queryresult1['Plan'])
+        c_dict2 = self.count_node_types(queryresult2['Plan'])
+        print(c_dict1)
+        print(c_dict2)
+        add, rem, diffrem, diffadd = PostgresDB.compare_node_counts(c_dict1, c_dict2)
+        return add, rem, diffrem, diffadd
+
+    def compare_node_counts(d1, d2):
+        # Get the keys from both dictionaries
+        keys1 = set(d1.keys())
+        keys2 = set(d2.keys())
+
+        add_count = {}
+        rem_count = {}
+        removed_keys = keys1 - keys2
+        rem_count = {k: d1[k] for k in removed_keys}
+        added_keys = keys2 - keys1
+        add_count = {k: d2[k] for k in added_keys}
+    
+        # Get the differences between the two sets of keys
+        
+        # Get the counts of the added keys
+        diff_add = {}
+        diff_rem = {}
+        for key in d1.keys() & d2.keys():
+            if d1[key] < d2[key]:
+                diff_add[key] = d2[key] - d1[key]
+            elif(d1[key] > d2[key]):
+                diff_rem[key] = d1[key] - d2[key]
+        # Print the added counts
+        print(add_count)
+        print(rem_count)
+        print(diff_rem)
+        print(diff_add)
+        return add_count, rem_count, diff_rem, diff_add
 
     def qepDifference(self, query1, query2):
         queryresult1 = self.queryDB(query1)
         queryresult2 = self.queryDB(query2)
+        add, rem, diffrem, diffadd = self.count_differences(queryresult1, queryresult2)
         differences = []
-        differences = self.compare_qep_trees(queryresult1["Plan"], queryresult2["Plan"])
+        differences = self.compare_qep_trees(queryresult1["Plan"], queryresult2["Plan"], add, rem, diffrem, diffadd)
         if len(differences) == 0:
             return "No change in qep"
         return differences
@@ -113,16 +169,30 @@ class PostgresDB:
                 node_types += PostgresDB.get_node_types(subplan)
         return node_types
 
-    def compare_qep_trees(self, qep_tree1, qep_tree2):
+    def compare_qep_trees(self, qep_tree1, qep_tree2, add, rem, diffrem, diffadd):
         output = []
-
+        countermain = 1
+        for key, value in add.items():
+            output.append(f"Difference {countermain}")
+            output.append(f"{value} {key} got added in QEP 2\n")
+            countermain = countermain + 1
+        for key, value in rem.items():
+            output.append(f"Difference {countermain}")
+            output.append(f"{value} {key} got removed in QEP 2\n")
+            countermain = countermain + 1
+        for key, value in diffrem.items():
+            output.append(f"Difference {countermain}")
+            output.append(f"{value} {key} got removed in QEP 2\n")
+            countermain = countermain + 1
+        for key, value in diffadd.items():
+            output.append(f"Difference {countermain}")
+            output.append(f"{value} {key} got added in QEP 2\n")
+            countermain = countermain + 1
         # Define a DFS traversal function to traverse the QEP trees
         def dfs_traversal(node1, node2, path, counter):
             # Check if the nodes have the same node type
-            if (node1['Node Type'] != node2['Node Type'] or node1.get('Join Type') != node2.get(
-                    'Join Type') or node1.get('Hash Cond') != node2.get('Hash Cond')
-                    or node1.get('Startup Cost') != node2.get('Startup Cost') or node1.get('Total Cost') != node2.get(
-                        'Total Cost')):
+            if( node1['Node Type'] != node2['Node Type'] or  node1.get('Join Type') != node2.get('Join Type') or node1.get('Hash Cond') != node2.get('Hash Cond')
+               or node1.get('Startup Cost') != node2.get('Startup Cost') or node1.get('Total Cost') != node2.get('Total Cost')):
                 output.append(f"Difference {counter}\n")
             if node1['Node Type'] != node2['Node Type']:
                 output.append(
@@ -153,7 +223,7 @@ class PostgresDB:
                     dfs_traversal(node1['Plans'][i], node2['Plans'][i], f"{path} -> Plans[{i}]", counter)
 
         # Start the DFS traversal from the root nodes
-        dfs_traversal(qep_tree1, qep_tree2, "Node Type: Root", 1)
+        dfs_traversal(qep_tree1, qep_tree2, "Node Type: Root", countermain)
 
         # Return the output
         return "\n".join(output)
