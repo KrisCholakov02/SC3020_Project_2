@@ -9,8 +9,6 @@
 - [Usage](#usage)
 - [Technologies Employed](#technologies-employed)
 - [Key Algorithms](#key-algorithms)
-- [Limitations and Future Improvements](#limitations-and-future-improvements)
-- [GitHub Repository](#github-repository)
 
 ## Overview
 SQL Query Evolution Analyzer simplifies the process of query optimization. The application:
